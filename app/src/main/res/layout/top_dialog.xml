@@ -35,5 +35,10 @@
             android:text="Close"
             android:textColor="@android:color/white"
             android:textSize="16sp" />
+        <Button
+            android:id="@+id/btnCopy"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Copy Text" />
     </LinearLayout>
 </androidx.cardview.widget.CardView>
