@@ -5,6 +5,9 @@ import android.app.Dialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
+import android.content.ClipData;
+import android.content.ClipboardManager;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
@@ -100,7 +103,7 @@ public class MainActivity extends AppCompatActivity {
 
         checkPermissions();
 
-        connectBtn.setOnClickListener(v -> new Thread(this::connectToESP32).start());
+        findViewById(R.id.connectBtn).setOnClickListener(v -> new Thread(this::connectToESP32).start());
     }
     private void checkPermissions() {
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
@@ -137,22 +140,38 @@ public class MainActivity extends AppCompatActivity {
             btSocket = esp32Device.createRfcommSocketToServiceRecord(SERIAL_UUID);
             btSocket.connect();
             inputStream = btSocket.getInputStream();
+            runOnUiThread(() -> Toast.makeText(this, "Connected to ESP32!", Toast.LENGTH_SHORT).show());
 
-           // runOnUiThread(() -> statusText.setText("Connected to ESP32!"));
+            // runOnUiThread(() -> statusText.setText("Connected to ESP32!"));
 
-            new Thread(this::receiveImage).start();
+            new Thread(this::receiveImagesContinuously).start();
 
         } catch (IOException e) {
             //runOnUiThread(() -> statusText.setText("Connection failed!"));
+            runOnUiThread(() -> Toast.makeText(this, "Connection to ESP32 failed!", Toast.LENGTH_SHORT).show());
             Log.e("Bluetooth", "Connection failed", e);
             closeSocket();
         }
     }
-    Bitmap bmap;
-    private void receiveImage() {
+    private void receiveImagesContinuously() {
         try {
-            ByteArrayOutputStream imageBuffer = new ByteArrayOutputStream();
+            while (btSocket != null && btSocket.isConnected()) {
+                if (inputStream.available() > 0) {
+                    receiveImage(); // Receive and process the image
+                }
+                Thread.sleep(100); // Prevent high CPU usage
+            }
+        } catch (IOException | InterruptedException e) {
+            Log.e("Bluetooth", "Error in receiving images", e);
+        }
+    }
 
+
+    private Bitmap bmap;
+    private void receiveImage() {
+        ByteArrayOutputStream imageBuffer = new ByteArrayOutputStream(); // ✅ Moved outside try
+
+        try {
             // Step 1: Read Image Size
             String imageSizeStr = readLine();
             Log.d("Bluetooth", "Received Header: " + imageSizeStr);
@@ -205,18 +224,36 @@ public class MainActivity extends AppCompatActivity {
                 if (bmap != null) {
                     //imageView.setImageBitmap(bmap);
                     //statusText.setText("Image received!");
+                    Toast.makeText(this, "Image received successfully!", Toast.LENGTH_SHORT).show();
                 } else {
+                    Toast.makeText(this, "Failed to decode image!", Toast.LENGTH_SHORT).show();
                     //statusText.setText("Failed to decode image!");
                     Log.e("Bluetooth", "Bitmap decoding failed!");
                 }
             });
 
+            // ✅ Only extract text if image was successfully decoded
+            if (bmap != null) {
+                extractTextFromImage();
+            }
+
         } catch (IOException e) {
             Log.e("Bluetooth", "Image receive error", e);
+        } finally {
+            flushInputStream(); // ✅ Ensures input stream is always flushed
         }
-        extractTextFromImage();
     }
 
+    private void flushInputStream() {
+        try {
+            byte[] buffer = new byte[1024]; // Read in chunks
+            while (inputStream.available() > 0) {
+                inputStream.read(buffer); // Discard all available bytes
+            }
+        } catch (IOException e) {
+            Log.e("Bluetooth", "Error clearing input stream", e);
+        }
+    }
 
     private void extractTextFromImage() {
 //        if (imageUri == null) {
@@ -284,17 +321,17 @@ public class MainActivity extends AppCompatActivity {
     }
     private void fetchMeaning(String word) {
         if (wordCache.containsKey(word)) {
-            showTopDialog(wordCache.get(word)); // Use cached meaning
+            showTopDialog(wordCache.get(word),null); // Use cached meaning
         } else {
             executorService.execute(() -> { // Run API call in background
                 DictionaryAPIHelper.fetchMeaning(word, result -> {
                     wordCache.put(word, result); // Cache result
-                    runOnUiThread(() -> showTopDialog(result)); // Update UI safely
+                    runOnUiThread(() -> showTopDialog(result,word)); // Update UI safely
                 });
             });
         }
     }
-    private void showTopDialog(String message) {
+    private void showTopDialog(String message,String word) {
         Dialog dialog = new Dialog(this);
         dialog.setContentView(R.layout.top_dialog);
 
@@ -311,6 +348,12 @@ public class MainActivity extends AppCompatActivity {
         Button btnOk = dialog.findViewById(R.id.btnOk);
         btnOk.setOnClickListener(v -> dialog.dismiss());
 
+        Button btnCopy = dialog.findViewById(R.id.btnCopy);
+        btnCopy.setOnClickListener(v -> {
+            ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+            ClipData clip = ClipData.newPlainText("Copied Text", word);
+            clipboard.setPrimaryClip(clip);
+        });
         dialog.show();
     }
     private String readLine() throws IOException {
