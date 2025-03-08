@@ -1,0 +1,31 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <Button
+        android:id="@+id/btnSelectImage"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Select Image" />
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Extracted Text:"
+        android:textSize="20sp"/>
+    <TextView
+        android:id="@+id/tvExtractedText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:autoLink="none"
+        android:clickable="true"
+        android:focusable="true"
+        android:justificationMode="inter_word"
+        android:text="Extracted text will appear here"
+        android:scrollbars="vertical"
+        android:textSize="35sp"/>
+
+</LinearLayout>
