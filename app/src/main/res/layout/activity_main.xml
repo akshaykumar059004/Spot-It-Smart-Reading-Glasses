@@ -15,6 +15,7 @@
         android:layout_height="wrap_content"
         android:text="Extracted Text:"
         android:textSize="20sp"/>
+
     <TextView
         android:id="@+id/tvExtractedText"
         android:layout_width="match_parent"
@@ -24,8 +25,8 @@
         android:clickable="true"
         android:focusable="true"
         android:justificationMode="inter_word"
-        android:text="Extracted text will appear here"
         android:scrollbars="vertical"
-        android:textSize="35sp"/>
+        android:text="Extracted text will appear here"
+        android:textSize="35sp" />
 
 </LinearLayout>

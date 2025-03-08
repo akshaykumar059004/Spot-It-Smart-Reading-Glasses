@@ -1,9 +1,10 @@
 package com.developersunit.spotit_glasses_hackhub25;
 
-
+import android.app.Dialog;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -12,7 +13,10 @@ import android.text.SpannableString;
 import android.text.TextPaint;
 import android.text.method.ScrollingMovementMethod;
 import android.text.style.ClickableSpan;
+import android.view.Gravity;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.Window;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -28,10 +32,15 @@ import com.google.mlkit.vision.text.Text;
 import com.google.mlkit.vision.text.TextRecognition;
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class MainActivity extends AppCompatActivity {
     //private ImageView imageView;
     private TextView tvExtractedText;
+    private final HashMap<String, String> wordCache = new HashMap<>(); // Caching meanings
+    private final ExecutorService executorService = Executors.newSingleThreadExecutor(); // Background thread
     private Uri imageUri;
 
     @Override
@@ -102,7 +111,8 @@ public class MainActivity extends AppCompatActivity {
             ClickableSpan clickableSpan =  new ClickableSpan() {
                 @Override
                 public void onClick(@NonNull View widget) {
-                    Toast.makeText(MainActivity.this, "You clicked: " + word, Toast.LENGTH_SHORT).show();
+//                    Toast.makeText(MainActivity.this, "You clicked: " + word, Toast.LENGTH_SHORT).show();
+                    fetchMeaning(word);
                 }
                 public void updateDrawState(@NonNull TextPaint ds) {
                     ds.setUnderlineText(false);
@@ -110,12 +120,41 @@ public class MainActivity extends AppCompatActivity {
                 }
             };
 
-              spannableString.setSpan(clickableSpan,wordStart,wordEnd,Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-              startIndex = wordEnd + 1;
+            spannableString.setSpan(clickableSpan,wordStart,wordEnd,Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+            startIndex = wordEnd + 1;
         }
         tvExtractedText.setText(spannableString);
         tvExtractedText.setMovementMethod(android.text.method.LinkMovementMethod.getInstance());
     }
+    private void fetchMeaning(String word) {
+        if (wordCache.containsKey(word)) {
+            showTopDialog(wordCache.get(word)); // Use cached meaning
+        } else {
+            executorService.execute(() -> { // Run API call in background
+                DictionaryAPIHelper.fetchMeaning(word, result -> {
+                    wordCache.put(word, result); // Cache result
+                    runOnUiThread(() -> showTopDialog(result)); // Update UI safely
+                });
+            });
+        }
+    }
+    private void showTopDialog(String message) {
+        Dialog dialog = new Dialog(this);
+        dialog.setContentView(R.layout.top_dialog);
+
+        Window window = dialog.getWindow();
+        if (window != null) {
+            window.setGravity(Gravity.TOP);
+            window.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            window.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        }
+
+        TextView textViewDialog = dialog.findViewById(R.id.textViewDialog);
+        textViewDialog.setText(message);
+
+        Button btnOk = dialog.findViewById(R.id.btnOk);
+        btnOk.setOnClickListener(v -> dialog.dismiss());
+
+        dialog.show();
+    }
 }
-
-
