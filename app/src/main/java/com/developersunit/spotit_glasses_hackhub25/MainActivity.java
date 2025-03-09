@@ -1,5 +1,7 @@
 package com.developersunit.spotit_glasses_hackhub25;
 
+import com.google.android.material.button.MaterialButton;
+import android.text.method.ScrollingMovementMethod;
 import android.Manifest;
 import android.app.Dialog;
 import android.bluetooth.BluetoothAdapter;
@@ -8,19 +10,15 @@ import android.bluetooth.BluetoothSocket;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
-import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
-import android.net.Uri;
 import android.os.Bundle;
-import android.provider.MediaStore;
 import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.TextPaint;
-import android.text.method.ScrollingMovementMethod;
 import android.text.style.ClickableSpan;
 import android.util.Log;
 import android.view.Gravity;
@@ -31,20 +29,14 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
-
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
-
-import com.bumptech.glide.Glide;
 import com.google.mlkit.vision.common.InputImage;
 import com.google.mlkit.vision.text.Text;
 import com.google.mlkit.vision.text.TextRecognition;
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -59,14 +51,13 @@ public class MainActivity extends AppCompatActivity {
     private BluetoothAdapter bluetoothAdapter;
     private BluetoothSocket btSocket;
     private InputStream inputStream;
-    private ImageView imageView;
-    private TextView statusText;
-    private Button connectBtn;
+    private MaterialButton connectBtn;
     //private ImageView imageView;
     private TextView tvExtractedText;
+
+    private ImageView connectionStatusIcon;
     private final HashMap<String, String> wordCache = new HashMap<>(); // Caching meanings
     private final ExecutorService executorService = Executors.newSingleThreadExecutor(); // Background thread
-    private Uri imageUri;
     private static final int PERMISSION_REQUEST_CODE = 1;
 
     @Override
@@ -74,26 +65,11 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        connectionStatusIcon = findViewById(R.id.connectionStatusIcon);
         connectBtn = findViewById(R.id.connectBtn);
-        //imageView = findViewById(R.id.imageView);
         tvExtractedText = findViewById(R.id.tvExtractedText);
         tvExtractedText.setMovementMethod(new ScrollingMovementMethod());
-//
-//        // Image Picker
-//        ActivityResultLauncher<Intent> imagePickerLauncher = registerForActivityResult(
-//                new ActivityResultContracts.StartActivityForResult(),
-//                result -> {
-//                    if (result.getResultCode() == RESULT_OK && result.getData() != null) {
-//                        imageUri = result.getData().getData();
-//                        //Glide.with(this).load(imageUri).into(imageView);
-//                        extractTextFromImage();
-//                    }
-//                });
-//
-//        btnSelectImage.setOnClickListener(v -> {
-//            Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-//            imagePickerLauncher.launch(intent);
-//        });
+        tvExtractedText.setVerticalScrollBarEnabled(true);
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 
         if (bluetoothAdapter == null) {
@@ -103,7 +79,35 @@ public class MainActivity extends AppCompatActivity {
 
         checkPermissions();
 
-        findViewById(R.id.connectBtn).setOnClickListener(v -> new Thread(this::connectToESP32).start());
+        updateConnectButton(false);
+
+        // Toggle connection on button click
+        connectBtn.setOnClickListener(v -> {
+            if (btSocket != null && btSocket.isConnected()) {
+                // Already connected: disconnect
+                disconnectBluetooth();
+            } else {
+                // Not connected: attempt to connect
+                new Thread(this::connectToESP32).start();
+            }
+        });
+    }
+    private void updateConnectButton(final boolean connected) {
+        runOnUiThread(() -> {
+            Log.d("ButtonUpdate", "Updating button text: " + (connected ? "Disconnect" : "Connect"));
+           // connectBtn.setTextAppearance(R.style.TextAppearance_MaterialComponents_Button);
+            connectBtn.setEnabled(true);
+            connectBtn.setText(connected ? "Disconnect" : "Connect");
+        });
+    }
+
+    private void disconnectBluetooth() {
+        runOnUiThread(() -> Toast.makeText(this, "Disconnecting...", Toast.LENGTH_SHORT).show());
+        closeSocket();
+        runOnUiThread(() -> {
+            connectionStatusIcon.setImageResource(R.drawable.icons8_circle_48);
+            updateConnectButton(false);
+        });
     }
     private void checkPermissions() {
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
@@ -153,7 +157,16 @@ public class MainActivity extends AppCompatActivity {
             closeSocket();
         }
     }
+
     private void receiveImagesContinuously() {
+        runOnUiThread(() -> {
+            if (btSocket != null && btSocket.isConnected()) {
+                connectionStatusIcon.setImageResource(R.drawable.icons8_green_circle_48);
+
+            } else {
+                connectionStatusIcon.setImageResource(R.drawable.icons8_circle_48);
+            }
+        });
         try {
             while (btSocket != null && btSocket.isConnected()) {
                 if (inputStream.available() > 0) {
