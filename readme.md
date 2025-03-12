@@ -68,7 +68,7 @@
 
 ## Contact
 
-For inquiries or collaborations, reach out at <a href="mailto:akshaykumar059004@gmail.com"> or visit our project page.
+For inquiries or collaborations, reach out at <a href="mailto:akshaykumar059004@gmail.com"> our mail.
 
 ---
 
