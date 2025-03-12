@@ -22,9 +22,9 @@
 - **OCR Technology:** Ml Kit Library .
 - **Communication:** Bluetooth for data transmission between ESP32 and the mobile app.
 
-**Installation**
+### Installation
 
-### Mobile Application Setup
+**Mobile Application Setup**
 
 1.
    1. Download or clone this repository:
@@ -40,7 +40,7 @@
 6. Click **Run** (▶) in Android Studio to install and launch the application on your device.
 7. Alternatively, you can generate an APK by navigating to **Build > Build Bundle(s) / APK(s) > Build APK(s)** and installing the APK manually.
 
-### ESP32 Firmware Setup
+**ESP32 Firmware Setup**
 
 1. Connect the ESP32 board to your computer using a USB cable.
 2. Open the Arduino IDE and install the necessary ESP32 board support package.
@@ -51,14 +51,14 @@
 7. Restart the ESP32 module after flashing.
 8. Pair the ESP32 with your mobile application via Bluetooth.
 
-**## Usage**
+**Usage**
 
 - Wear the glasses and power them on.
 - Tap to capture an image of the text.
 - The image is sent to the mobile companion app.
 - Select specific words to look up instantly on the app.
 
-**## Future Improvements**
+**Future Improvements**
 
 - Enhancing OCR accuracy for better text recognition.
 - Adding support for multiple languages.
