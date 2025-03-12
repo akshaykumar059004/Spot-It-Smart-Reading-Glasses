@@ -4,17 +4,17 @@
 
 <p id="description">Spot It Glasses is a pair of smart reading glasses equipped with a built-in camera. It captures images upon touch and sends them to a mobile companion application. On the app users can select specific words to look up instantly making reading more efficient and accessible.</p>
 
-**##Demo Video and Screenshots:**
+**Demo Video and Screenshots:**
 
 
-**##Features**
+**Features**
 
 - **Instant Word Lookup:** Allows users to quickly find the meaning of selected words from captured images.
 - **Camera Integration:** Built-in camera captures text upon user input.
 - **Mobile Companion App:** Seamless connectivity with a smartphone application for text processing.
 - **Customizable Word Selection:** Users can choose specific words for quick reference.
 
-**## Technologies Used**
+**Technologies Used**
 
 - **Hardware:** ESP32 camera board with OV2640 camera module.
 - **Embedded Programming:** Developed using Embedded C for ESP32 board.
@@ -22,7 +22,7 @@
 - **OCR Technology:** Ml Kit Library .
 - **Communication:** Bluetooth for data transmission between ESP32 and the mobile app.
 
-**## Installation**
+**Installation**
 
 ### Mobile Application Setup
 
