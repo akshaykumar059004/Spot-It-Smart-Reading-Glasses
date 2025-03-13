@@ -5,6 +5,7 @@
 <p id="description">Spot It Glasses is a pair of smart reading glasses equipped with a built-in camera. It captures images upon touch and sends them to a mobile companion application. On the app users can select specific words to look up instantly making reading more efficient and accessible.</p>
 
 **Demo Video and Screenshots:**
+https://youtu.be/ht6kKNzCL6U
 
 
 **Features**
