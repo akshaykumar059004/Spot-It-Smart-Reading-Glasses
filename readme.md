@@ -77,8 +77,9 @@ For inquiries or collaborations, reach out at <a href="mailto:akshaykumar059004@
 This is a prototype project and should not be used as a medical or safety device.
 
 ### Contributors
-Akshaykumar 
-Kaviyarasan
+Akshaykumar, 
+Kaviyarasan,
+Churchill L.
 
 
   
